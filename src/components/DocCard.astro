@@ -1,0 +1,21 @@
+---
+import type { DocEntry } from "../data/manifest";
+
+export interface Props {
+	doc: DocEntry;
+}
+
+const { doc } = Astro.props as Props;
+const thumbSrc = doc.preview.thumbnailSrc;
+---
+
+<a class="docCard" href={`doc/${doc.id}`}>
+	<div class="thumb" aria-hidden="true">
+		<img src={thumbSrc} alt="" loading="lazy" />
+	</div>
+	<div class="docMeta">
+		<div class="docTitle">{doc.title}</div>
+		{doc.description ? <div class="docDesc">{doc.description}</div> : null}
+	</div>
+</a>
+

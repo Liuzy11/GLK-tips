@@ -1,0 +1,92 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import type { DocEntry } from "../../data/manifest";
+import { loadManifestForSite } from "../../data/manifestLoader";
+
+export async function getStaticPaths() {
+	const { docs } = await loadManifestForSite();
+	return docs.map((doc) => ({ params: { id: doc.id } }));
+}
+
+const { id } = Astro.params as { id: string };
+const { docs } = await loadManifestForSite();
+const doc: DocEntry | undefined = docs.find((d) => d.id === id);
+---
+
+<Layout title={doc ? doc.title : "资料不存在"}>
+	{doc ? (
+		<>
+			<h1 class="pageTitle">{doc.title}</h1>
+			<p class="pageSub">{doc.description ?? " "}</p>
+
+			<div class="twoCol">
+				<section class="panel" aria-label="预览区">
+					<div class="sectionTitle">预览</div>
+					<div class="preview">
+						<div class="previewImg" style="overflow:hidden;">
+							<img
+								src={doc.preview.heroSrc}
+								alt=""
+								style="width:100%; height:auto; display:block;"
+							/>
+						</div>
+
+						{doc.preview.kind === "images" ? (
+							<div class="muted" style="font-size:12.5px;">
+								已生成 {doc.preview.pageCount} 页图片预览。
+							</div>
+						) : (
+							<div class="muted" style="font-size:12.5px;">
+								此处为示例预览；等你把 DOCX 转换接入后会显示分页图片。
+							</div>
+						)}
+					</div>
+				</section>
+
+				<aside class="panel" aria-label="下载区">
+					<div class="sectionTitle">下载</div>
+					<div class="downloadRow">
+						<a
+							class="btn btnPrimary"
+							href={doc.download.originalDocxHref ?? "#"}
+							aria-disabled={doc.download.originalDocxHref ? undefined : "true"}
+							download
+						>
+							下载原始 DOCX
+						</a>
+						<a
+							class="btn"
+							href={doc.download.previewZipHref ?? "#"}
+							aria-disabled={doc.download.previewZipHref ? undefined : "true"}
+							download
+						>
+							下载预览图片 ZIP
+						</a>
+					</div>
+					<div class="muted" style="font-size:12.5px; margin-top:10px; line-height:1.5;">
+						目前还没接入转换产物；后续会自动把图片/ZIP 与 manifest 一起生成到 `public/`。
+					</div>
+				</aside>
+			</div>
+
+			<section class="section panel" aria-label="分块内容">
+				<div class="sectionTitle">分块导航</div>
+				<div class="blocksNav">
+					{doc.blocks.map((b) => (
+						<a class="anchorBtn" href={`#${b.id}`}>{b.title}</a>
+					))}
+				</div>
+
+				{doc.blocks.map((b) => (
+					<article class="blockArticle" id={b.id}>
+						<div class="blockTitle">{b.title}</div>
+						<p class="blockBody">{b.body ?? "（暂无内容，等待 DOCX->HTML 提取）"}</p>
+					</article>
+				))}
+			</section>
+		</>
+	) : (
+		<p class="muted">未找到该资料条目。</p>
+	)}
+</Layout>
+

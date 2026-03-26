@@ -1,23 +1,34 @@
+---
+import "../styles/global.css";
+
+const { title } = Astro.props as { title?: string };
+const pageTitle = title ?? "资料平台";
+---
+
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
+		<title>{pageTitle}</title>
+
 	</head>
 	<body>
-		<slot />
+		<div class="topbar">
+			<div class="container topbarInner">
+				<div class="brand">
+					<div class="brandMark" aria-hidden="true" />
+					<div class="brandTitle">{pageTitle}</div>
+				</div>
+				<div class="pill">点击卡片快速打开分块资料</div>
+			</div>
+		</div>
+
+		<div class="container">
+			<slot />
+		</div>
 	</body>
 </html>
-
-<style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
-</style>

@@ -14,7 +14,7 @@ const categoryOrder = (name: string) => {
 };
 
 const sortDoc = docs.find((doc) => /二级单位排序/.test(doc.title));
-const dutyDocs = docs.filter((doc) => /值班/.test(doc.title));
+const dutyDocs = docs.filter((doc) => /值班/.test(doc.title) || doc.id === 'doc-duty-table');
 
 const normalDocs = docs.filter((doc) => {
 	if (sortDoc && doc.id === sortDoc.id) return false;

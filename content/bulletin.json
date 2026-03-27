@@ -17,16 +17,16 @@
   ],
   "photos": [
     {
-      "src": "/bulletin-wall/photo-1.jpg",
-      "name": "展览图 01"
+      "src": "/bulletin-wall/scene-1.svg",
+      "name": "晴日山川"
     },
     {
-      "src": "/bulletin-wall/photo-2.jpg",
-      "name": "展览图 02"
+      "src": "/bulletin-wall/scene-2.svg",
+      "name": "日落湖景"
     },
     {
-      "src": "/bulletin-wall/photo-3.png",
-      "name": "展览图 03"
+      "src": "/bulletin-wall/scene-3.svg",
+      "name": "林间小径"
     }
   ]
 }

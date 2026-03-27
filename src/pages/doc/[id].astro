@@ -11,82 +11,77 @@ export async function getStaticPaths() {
 const { id } = Astro.params as { id: string };
 const { docs } = await loadManifestForSite();
 const doc: DocEntry | undefined = docs.find((d) => d.id === id);
+
+const hasDownload = !!(doc?.download?.originalDocxHref);
+const hasZip = !!(doc?.download?.previewZipHref);
+const hasImages = doc?.preview?.kind === "images";
 ---
 
 <Layout title={doc ? doc.title : "资料不存在"}>
 	{doc ? (
 		<>
 			<h1 class="pageTitle">{doc.title}</h1>
-			<p class="pageSub">{doc.description ?? " "}</p>
+			{doc.description ? <p class="pageSub">{doc.description}</p> : null}
 
 			<div class="twoCol">
 				<section class="panel" aria-label="预览区">
-					<div class="sectionTitle">预览</div>
-					<div class="preview">
-						<div class="previewImg" style="overflow:hidden;">
-							<img
-								src={doc.preview.heroSrc}
-								alt=""
-								style="width:100%; height:auto; display:block;"
-							/>
+					<div class="sectionTitle">文件预览</div>
+					{hasImages ? (
+						<div class="preview">
+							{Array.from({ length: (doc.preview as any).pageCount }, (_, i) => (
+								<div class="previewImg" style="overflow:hidden;">
+									<img
+										src={(doc.preview as any).pageSrc(i + 1)}
+										alt={`第 ${i + 1} 页`}
+										style="width:100%; height:auto; display:block;"
+										loading={i === 0 ? "eager" : "lazy"}
+									/>
+								</div>
+							))}
 						</div>
-
-						{doc.preview.kind === "images" ? (
-							<div class="muted" style="font-size:12.5px;">
-								已生成 {doc.preview.pageCount} 页图片预览。
+					) : (
+						<div class="docPreviewPlaceholder">
+							<div class="docPreviewIcon">
+								<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+									<rect x="6" y="4" width="28" height="36" rx="4" fill="rgba(0,122,255,0.10)" stroke="rgba(0,122,255,0.25)" stroke-width="1.5"/>
+									<path d="M34 4 L42 12 L34 12 Z" fill="rgba(0,122,255,0.15)" stroke="rgba(0,122,255,0.20)" stroke-width="1"/>
+									<rect x="6" y="4" width="28" height="36" rx="4" fill="none" stroke="rgba(0,122,255,0.25)" stroke-width="1.5"/>
+									<path d="M13 18 H31 M13 24 H28 M13 30 H24" stroke="rgba(0,122,255,0.35)" stroke-width="1.5" stroke-linecap="round"/>
+								</svg>
 							</div>
-						) : (
-							<div class="muted" style="font-size:12.5px;">
-								此处为示例预览；等你把 DOCX 转换接入后会显示分页图片。
-							</div>
-						)}
-					</div>
+							<p class="docPreviewName">{doc.title}</p>
+							<p class="docPreviewHint">点击下方按钮下载后即可在本地查看</p>
+						</div>
+					)}
 				</section>
 
 				<aside class="panel" aria-label="下载区">
-					<div class="sectionTitle">下载</div>
+					<div class="sectionTitle">保存文件</div>
 					<div class="downloadRow">
 						<a
 							class="btn btnPrimary"
-							href={doc.download.originalDocxHref ?? "#"}
-							aria-disabled={doc.download.originalDocxHref ? undefined : "true"}
+							href={hasDownload ? doc.download.originalDocxHref! : "#"}
+							aria-disabled={hasDownload ? undefined : "true"}
 							download
 						>
-							下载原始 DOCX
+							<svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1v9M4 7l3.5 3.5L11 7M2 13h11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+							下载文件
 						</a>
-						<a
-							class="btn"
-							href={doc.download.previewZipHref ?? "#"}
-							aria-disabled={doc.download.previewZipHref ? undefined : "true"}
-							download
-						>
-							下载预览图片 ZIP
-						</a>
-					</div>
-					<div class="muted" style="font-size:12.5px; margin-top:10px; line-height:1.5;">
-						目前还没接入转换产物；后续会自动把图片/ZIP 与 manifest 一起生成到 `public/`。
+						{hasZip && (
+							<a
+								class="btn"
+								href={doc.download.previewZipHref!}
+								download
+							>
+								<svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2 4h11v8a1 1 0 01-1 1H3a1 1 0 01-1-1V4zm3-3h5l1 3H4L5 1z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" fill="none"/></svg>
+								下载图片包
+							</a>
+						)}
 					</div>
 				</aside>
 			</div>
-
-			<section class="section panel" aria-label="分块内容">
-				<div class="sectionTitle">分块导航</div>
-				<div class="blocksNav">
-					{doc.blocks.map((b) => (
-						<a class="anchorBtn" href={`#${b.id}`}>{b.title}</a>
-					))}
-				</div>
-
-				{doc.blocks.map((b) => (
-					<article class="blockArticle" id={b.id}>
-						<div class="blockTitle">{b.title}</div>
-						<p class="blockBody">{b.body ?? "（暂无内容，等待 DOCX->HTML 提取）"}</p>
-					</article>
-				))}
-			</section>
 		</>
 	) : (
 		<p class="muted">未找到该资料条目。</p>
 	)}
 </Layout>
-

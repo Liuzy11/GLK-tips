@@ -25,6 +25,11 @@ const normalDocs = docs.filter((doc) => {
 const sections = groupDocsByCategory(normalDocs).sort(
 	(a, b) => categoryOrder(a.category) - categoryOrder(b.category)
 );
+
+// 把 category 字符串中的编号前缀去掉，只保留中文部分
+function cleanCategory(name: string) {
+	return name.replace(/^[\d_\-\s]+/, "").trim() || name;
+}
 ---
 
 <Layout title="资料平台">
@@ -34,11 +39,10 @@ const sections = groupDocsByCategory(normalDocs).sort(
 		<h2 class="sectionTitle">{bulletin.title}</h2>
 		<div class="twoCol">
 			<div class="panel">
-				<div class="sectionTitle">照片展览区（可下载保存）</div>
-				<p class="muted">{bulletin.subtitle}</p>
+				<div class="panelLabel">照片展览</div>
 				<div class="galleryGrid">
 					{bulletin.photos.map((photo) => (
-						<a class="galleryItem" href={photo.src} download>
+						<a class="galleryItem" href={photo.src} download title={photo.name}>
 							<img src={photo.src} alt={photo.name} loading="lazy" />
 						</a>
 					))}
@@ -46,7 +50,7 @@ const sections = groupDocsByCategory(normalDocs).sort(
 			</div>
 
 			<div class="bulletinBoard">
-				<div class="sectionTitle">公告发布区</div>
+				<div class="panelLabel">公告</div>
 				{bulletin.notices.map((item) => (
 					<div class="bulletinItem">
 						<p class="bulletinTitle">{item.title}</p>
@@ -58,20 +62,20 @@ const sections = groupDocsByCategory(normalDocs).sort(
 	</section>
 
 	<div class="twoColumnSection">
-		<section class="section" aria-label="30家二级单位排序">
-			<h2 class="sectionTitle">30家二级单位排序（常看）</h2>
+		<section class="section" aria-label="二级单位排序">
+			<h2 class="sectionTitle">二级单位排序</h2>
 			<div class="cardGrid">
-				{sortDoc ? <DocCard doc={sortDoc} /> : <div class="panel muted">未检测到“二级单位排序”文件，请放入管理科规范资料目录。</div>}
+				{sortDoc ? <DocCard doc={sortDoc} /> : <div class="panel muted">未检测到排序文件。</div>}
 			</div>
 		</section>
 
 		<section class="section" aria-label="值班表">
-			<h2 class="sectionTitle">值班表（常看）</h2>
+			<h2 class="sectionTitle">值班表</h2>
 			<div class="cardGrid">
 				{dutyDocs.length > 0 ? (
 					dutyDocs.map((doc) => <DocCard doc={doc} />)
 				) : (
-					<div class="panel muted">当前未检测到值班表文件。放入后会自动显示在这里。</div>
+					<div class="panel muted">暂无值班表文件。</div>
 				)}
 			</div>
 		</section>
@@ -79,7 +83,7 @@ const sections = groupDocsByCategory(normalDocs).sort(
 
 	{sections.map(({ category, docs }) => (
 		<section class="section" aria-label={category}>
-			<h2 class="sectionTitle">{category}</h2>
+			<h2 class="sectionTitle">{cleanCategory(category)}</h2>
 			<div class="cardGrid">
 				{docs.map((doc) => (
 					<DocCard doc={doc} />

@@ -1,16 +1,82 @@
 ---
 import Layout from '../layouts/Layout.astro';
-
 import DocCard from '../components/DocCard.astro';
-import { groupDocsByCategory, loadManifestForSite } from "../data/manifestLoader";
+import { groupDocsByCategory, loadBulletinConfig, loadManifestForSite } from "../data/manifestLoader";
 
-const { siteTitle, docs } = await loadManifestForSite();
-const sections = groupDocsByCategory(docs);
+const [{ siteTitle, docs }, bulletin] = await Promise.all([
+	loadManifestForSite(),
+	loadBulletinConfig(),
+]);
+
+const categoryOrder = (name: string) => {
+	const matched = name.match(/^(\d+)/);
+	return matched ? Number(matched[1]) : Number.MAX_SAFE_INTEGER;
+};
+
+const sortDoc = docs.find((doc) => /二级单位排序/.test(doc.title));
+const dutyDocs = docs.filter((doc) => /值班/.test(doc.title));
+
+const normalDocs = docs.filter((doc) => {
+	if (sortDoc && doc.id === sortDoc.id) return false;
+	if (dutyDocs.some((d) => d.id === doc.id)) return false;
+	return true;
+});
+
+const sections = groupDocsByCategory(normalDocs).sort(
+	(a, b) => categoryOrder(a.category) - categoryOrder(b.category)
+);
 ---
 
-<Layout title="资料平台">
+<Layout title="管理科资料平台">
 	<h1 class="pageTitle">{siteTitle}</h1>
-	<p class="pageSub">按“卡片”打开分块资料；支持图片预览与下载（转换完成后）。</p>
+	<p class="pageSub">经典 iOS 17/18 毛玻璃风格 · 全部资料支持预览与下载 · 常看栏目已置顶</p>
+
+	<section class="section" aria-label="公告墙与展览图">
+		<h2 class="sectionTitle">{bulletin.title}</h2>
+		<div class="twoCol">
+			<div class="panel">
+				<div class="sectionTitle">照片展览区（可下载保存）</div>
+				<p class="muted">{bulletin.subtitle}</p>
+				<div class="galleryGrid">
+					{bulletin.photos.map((photo) => (
+						<a class="galleryItem" href={photo.src} download>
+							<img src={photo.src} alt={photo.name} loading="lazy" />
+						</a>
+					))}
+				</div>
+			</div>
+
+			<div class="bulletinBoard">
+				<div class="sectionTitle">公告发布区</div>
+				{bulletin.notices.map((item) => (
+					<div class="bulletinItem">
+						<p class="bulletinTitle">{item.title}</p>
+						<p class="bulletinTime">{item.time}</p>
+					</div>
+				))}
+			</div>
+		</div>
+	</section>
+
+	<div class="twoColumnSection">
+		<section class="section" aria-label="30家二级单位排序">
+			<h2 class="sectionTitle">30家二级单位排序（常看）</h2>
+			<div class="cardGrid">
+				{sortDoc ? <DocCard doc={sortDoc} /> : <div class="panel muted">未检测到“二级单位排序”文件，请放入管理科规范资料目录。</div>}
+			</div>
+		</section>
+
+		<section class="section" aria-label="值班表">
+			<h2 class="sectionTitle">值班表（常看）</h2>
+			<div class="cardGrid">
+				{dutyDocs.length > 0 ? (
+					dutyDocs.map((doc) => <DocCard doc={doc} />)
+				) : (
+					<div class="panel muted">当前未检测到值班表文件。放入后会自动显示在这里。</div>
+				)}
+			</div>
+		</section>
+	</div>
 
 	{sections.map(({ category, docs }) => (
 		<section class="section" aria-label={category}>

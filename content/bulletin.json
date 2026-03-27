@@ -1,0 +1,32 @@
+{
+  "title": "公告墙 · 展览图",
+  "subtitle": "可在这里发布通知，并持续补充现场照片。",
+  "notices": [
+    {
+      "title": "管理科公告：本周资料更新完成",
+      "time": "2026-03-27"
+    },
+    {
+      "title": "提醒：值班表请优先在常看栏目查看",
+      "time": "2026-03-26"
+    },
+    {
+      "title": "资料下载说明：点击卡片后在详情页可保存",
+      "time": "2026-03-24"
+    }
+  ],
+  "photos": [
+    {
+      "src": "/bulletin-wall/photo-1.jpg",
+      "name": "展览图 01"
+    },
+    {
+      "src": "/bulletin-wall/photo-2.jpg",
+      "name": "展览图 02"
+    },
+    {
+      "src": "/bulletin-wall/photo-3.png",
+      "name": "展览图 03"
+    }
+  ]
+}

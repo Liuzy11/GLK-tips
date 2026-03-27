@@ -24,6 +24,7 @@ export type DocEntry = {
 	id: string;
 	title: string;
 	category: string;
+	sourceRelPath?: string;
 	description?: string;
 	preview: DocPreview;
 	blocks: DocBlock[];

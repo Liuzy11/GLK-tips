@@ -7,6 +7,7 @@ export type JsonManifest = {
 	siteTitle: string;
 	docs: Array<
 		Omit<DocEntry, "preview"> & {
+			sourceRelPath?: string;
 			preview: {
 				thumbnailSrc?: string;
 				heroSrc?: string;
@@ -16,6 +17,13 @@ export type JsonManifest = {
 	>;
 };
 
+export type BulletinConfig = {
+	title: string;
+	subtitle?: string;
+	notices: Array<{ title: string; time: string }>;
+	photos: Array<{ src: string; name: string }>;
+};
+
 export async function loadJsonManifest(): Promise<JsonManifest | null> {
 	const filePath = path.join(process.cwd(), "content", "manifest.json");
 	try {
@@ -23,6 +31,27 @@ export async function loadJsonManifest(): Promise<JsonManifest | null> {
 		return JSON.parse(raw) as JsonManifest;
 	} catch {
 		return null;
+	}
+}
+
+export async function loadBulletinConfig(): Promise<BulletinConfig> {
+	const filePath = path.join(process.cwd(), "content", "bulletin.json");
+	try {
+		const raw = await fs.readFile(filePath, "utf8");
+		const parsed = JSON.parse(raw) as BulletinConfig;
+		return {
+			title: parsed.title || "公告墙 · 展览图",
+			subtitle: parsed.subtitle || "可在这里发布通知，并持续补充现场照片。",
+			notices: parsed.notices ?? [],
+			photos: parsed.photos ?? [],
+		};
+	} catch {
+		return {
+			title: "公告墙 · 展览图",
+			subtitle: "可在这里发布通知，并持续补充现场照片。",
+			notices: [],
+			photos: [],
+		};
 	}
 }
 
@@ -44,7 +73,6 @@ function makeThumbSvg(label: string) {
 export async function loadManifestForSite() {
 	const json = await loadJsonManifest();
 	if (!json) {
-		// Dev fallback (keeps existing behavior until manifest.json is populated by importer)
 		const mod = await import("./manifest");
 		return { siteTitle: mod.manifest.siteTitle, docs: mod.manifest.docs };
 	}
@@ -53,10 +81,19 @@ export async function loadManifestForSite() {
 		const short = d.title.slice(0, 2) || "资料";
 		const thumb = d.preview.thumbnailSrc?.trim() || makeThumbSvg(short);
 		const hero = d.preview.heroSrc?.trim() || thumb;
-
 		const pageCount = d.preview.pageCount ?? 0;
+
+		const sourceExt = d.sourceRelPath ? path.extname(d.sourceRelPath).toLowerCase() : ".docx";
+		const fallbackOriginalHref = d.sourceRelPath ? `/downloads/raw/${d.id}${sourceExt || ".docx"}` : "";
+		const originalDocxHref = d.download?.originalDocxHref?.trim() || fallbackOriginalHref;
+		const previewZipHref = d.download?.previewZipHref?.trim() || (pageCount > 0 ? `/downloads/${d.id}/pages.zip` : "");
+
 		return {
 			...d,
+			download: {
+				originalDocxHref: originalDocxHref || undefined,
+				previewZipHref: previewZipHref || undefined,
+			},
 			preview:
 				pageCount > 0
 					? {
@@ -65,7 +102,7 @@ export async function loadManifestForSite() {
 							heroSrc: hero,
 							pageCount,
 							pageSrc: (pageIndex1Based: number) =>
-								`assets/${d.id}/page-${String(pageIndex1Based).padStart(4, "0")}.png`,
+								`/assets/${d.id}/page-${String(pageIndex1Based).padStart(4, "0")}.png`,
 					  }
 					: {
 							kind: "placeholder",
@@ -87,4 +124,3 @@ export function groupDocsByCategory(docs: DocEntry[]) {
 	}
 	return [...map.entries()].map(([category, docs]) => ({ category, docs }));
 }
-
